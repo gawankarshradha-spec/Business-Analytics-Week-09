@@ -1,0 +1,736 @@
+<title>Midterm Review Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a mock browser window; one browser tab per exam question; inside each, code card + logic + an animated lab with Submit. */
+:root{
+  --bg:#f7f5ef; --paper:#ffffff; --chrome:#e9e6dd; --ink:#1e2a2f; --muted:#5d6a70; --line:#dcd8cc;
+  --accent:#0f6e6e; --accent-soft:#d9efec; --warm:#c75d1f; --warm-soft:#f9e5d8;
+  --code-bg:#1b2328; --code-fg:#e8eef0; --code-kw:#8fd3d1; --code-str:#f2c57c; --code-num:#f6a06c; --code-com:#8a9aa3;
+  --good:#2d7a3f; --good-soft:#dff2e2; --bad:#b4332f; --bad-soft:#f8dedd;
+  --display:"Fraunces",Georgia,serif; --body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a1d; --paper:#1d2529; --chrome:#242d32; --ink:#e9eeef; --muted:#9aa8ae; --line:#2f3b41;
+  --accent:#5fc3bf; --accent-soft:#163a3a; --warm:#f09a5e; --warm-soft:#3d2615;
+  --code-bg:#0f1417; --good:#7fd48f; --good-soft:#1c3a24; --bad:#f08a86; --bad-soft:#3f1d1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a1d; --paper:#1d2529; --chrome:#242d32; --ink:#e9eeef; --muted:#9aa8ae; --line:#2f3b41;
+  --accent:#5fc3bf; --accent-soft:#163a3a; --warm:#f09a5e; --warm-soft:#3d2615;
+  --code-bg:#0f1417; --good:#7fd48f; --good-soft:#1c3a24; --bad:#f08a86; --bad-soft:#3f1d1c; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;margin:0;
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--display);font-size:clamp(1.7rem,4vw,2.4rem);margin:0;line-height:1.15;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.eyebrow{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);font-weight:600}
+
+/* browser chrome */
+.browser{background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.14);overflow:hidden}
+.titlebar{display:flex;align-items:center;gap:6px;padding:10px 12px 0;background:var(--chrome)}
+.dots{display:flex;gap:7px;margin-right:10px}
+.dots i{width:12px;height:12px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+.tabs{display:flex;gap:4px;align-items:flex-end;flex:1;min-width:0;overflow-x:auto}
+.tab{background:transparent;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;padding:8px 14px;font:inherit;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:8px;position:relative;top:1px}
+.tab .fav{width:16px;height:16px;border-radius:3px;background:var(--accent);display:inline-grid;place-items:center;color:#fff;font-size:.6rem;font-family:var(--mono)}
+.tab[aria-selected="true"]{background:var(--paper);border-color:var(--line);color:var(--ink)}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.navbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.navbtn{background:none;border:0;color:var(--muted);font-size:1rem;width:30px;height:30px;border-radius:6px;cursor:pointer;font-family:var(--mono)}
+.navbtn:hover{background:var(--accent-soft);color:var(--accent)}
+.address{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-family:var(--mono);font-size:.82rem;color:var(--muted);overflow:hidden;white-space:nowrap}
+.address .lock{color:var(--good)}
+.address b{color:var(--ink)}
+.viewport{padding:22px 20px 32px;background:var(--bg)}
+@media(max-width:640px){.viewport{padding:16px 12px 24px}}
+.statusbar{display:flex;justify-content:space-between;padding:5px 14px;background:var(--chrome);border-top:1px solid var(--line);font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+
+.panel[hidden]{display:none}
+.panel{display:flex;flex-direction:column;gap:26px}
+h2{font-family:var(--display);font-size:1.45rem;margin:0}
+h3{font-size:.95rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+h4{margin:0;font-size:1.05rem}
+.pts{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:600;margin-left:8px;vertical-align:middle}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-weight:600;font-size:.85rem;letter-spacing:.1em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.task{display:flex;flex-direction:column;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid>*{min-width:0}
+@media(max-width:780px){.grid{grid-template-columns:1fr}}
+
+.code{background:var(--code-bg);color:var(--code-fg);border-radius:10px;overflow:hidden}
+.code pre{margin:0;padding:16px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;line-height:1.6}
+.code .bar{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.08);font-family:var(--mono);font-size:.72rem;color:var(--code-com)}
+.copy{background:rgba(255,255,255,.08);color:var(--code-fg);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:4px 10px;font:inherit;font-size:.72rem;cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.16)}
+.kw{color:var(--code-kw)} .str{color:var(--code-str)} .num{color:var(--code-num)} .com{color:var(--code-com)}
+.code pre .hl{background:rgba(143,211,209,.22);display:inline-block;width:100%;margin:0 -16px;padding:0 16px;border-left:3px solid var(--code-kw)}
+.out{background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;margin:0}
+.logic ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:.95rem}
+.logic strong{color:var(--accent)}
+code.i{font-family:var(--mono);font-size:.86em;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+.note{background:var(--warm-soft);border-left:4px solid var(--warm);padding:9px 14px;border-radius:8px;font-size:.92rem}
+
+/* lab */
+.lab{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lab .head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.lab .head h3{margin:0}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 18px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.f label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
+.f input{width:100%;font:inherit;font-family:var(--mono);padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.term{background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:.84rem;min-height:84px;white-space:pre-wrap;line-height:1.6}
+.term .p{color:var(--code-com)} .term .u{color:var(--code-str)} .term .o{color:var(--code-kw)}
+.term .cur::after{content:"▋";animation:blink 1s steps(1) infinite;color:var(--code-kw)}
+@keyframes blink{50%{opacity:0}}
+.trace{display:flex;flex-direction:column;gap:6px}
+.tr{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;padding:7px 10px;border-radius:8px;border:1px solid transparent;opacity:.4;transition:all .3s;font-size:.92rem}
+.tr.on{opacity:1;border-color:var(--accent);background:var(--accent-soft)}
+.tr.done{opacity:1}
+.tr .n{width:24px;height:24px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:.72rem;font-weight:600}
+.tr.on .n,.tr.done .n{background:var(--accent);color:#fff}
+.tr .e{font-family:var(--mono);font-size:.82rem;color:var(--muted);margin-top:2px;word-break:break-word}
+.tr.on .e,.tr.done .e{color:var(--ink)}
+.vars{display:flex;gap:10px;flex-wrap:wrap}
+.var{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:110px}
+.var small{display:block;font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.var b{font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums;transition:color .2s}
+.var.pulse b{color:var(--warm)}
+
+/* string blocks */
+.blocks{display:flex;gap:4px;overflow-x:auto;padding:12px 2px 6px}
+.blk{flex:0 0 auto;width:46px;text-align:center;cursor:pointer;user-select:none;border-radius:8px;border:1px solid var(--line);background:var(--paper);transition:transform .15s,background .25s,border-color .25s}
+.blk .ch{font-family:var(--mono);font-size:1.3rem;font-weight:600;padding:8px 0 2px}
+.blk .ix{font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+.blk .nx{font-family:var(--mono);font-size:.62rem;color:var(--warm);padding-bottom:5px}
+.blk.sel{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-4px)}
+.blk.sel .ix,.blk.sel .nx{color:rgba(255,255,255,.85)}
+.blk.skip{opacity:.4}
+.expr{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.expr .py{font-family:var(--mono);background:var(--code-bg);color:var(--code-fg);padding:7px 14px;border-radius:8px}
+.expr .res{font-family:var(--mono);background:var(--good-soft);color:var(--good);padding:7px 14px;border-radius:8px;font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.8rem;font-family:var(--mono);cursor:pointer}
+.chip.active,.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip.active{background:var(--accent);color:#fff}
+
+/* number cards (Q2 largest) */
+.nums{display:flex;gap:10px;flex-wrap:wrap}
+.numc{flex:1;min-width:80px;background:var(--paper);border:2px solid var(--line);border-radius:10px;text-align:center;padding:10px 6px;transition:all .3s}
+.numc small{display:block;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.numc b{font-family:var(--display);font-size:1.6rem;font-variant-numeric:tabular-nums}
+.numc.cmp{border-color:var(--warm);transform:translateY(-3px)}
+.numc.king{border-color:var(--good);background:var(--good-soft)}
+.numc.lost{opacity:.45}
+
+/* age range */
+.range{position:relative;height:56px;margin:8px 4px 0}
+.range .line{position:absolute;left:0;right:0;top:26px;height:4px;background:var(--line);border-radius:2px}
+.range .ok{position:absolute;top:26px;height:4px;background:var(--good);border-radius:2px}
+.range .tick{position:absolute;top:34px;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.range .pin{position:absolute;top:8px;transform:translateX(-50%);width:16px;height:16px;border-radius:50%;background:var(--warm);border:3px solid var(--paper);box-shadow:0 0 0 2px var(--warm);transition:left .6s cubic-bezier(.2,.8,.2,1)}
+.bool{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:.84rem}
+.bool span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 10px;opacity:.4;transition:all .3s}
+.bool span.on{opacity:1;border-color:var(--accent)}
+.bool span.t{color:var(--good)} .bool span.f{color:var(--bad)}
+
+/* list / dict */
+.cells{display:flex;gap:8px;flex-wrap:wrap}
+.cell{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-family:var(--mono);min-width:56px;text-align:center;transition:all .3s}
+.cell small{display:block;font-size:.64rem;color:var(--muted)}
+.cell.on{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-3px)}
+.cell.on small{color:rgba(255,255,255,.8)}
+.cell.new{border-color:var(--good);background:var(--good-soft)}
+
+/* csv */
+.csvwrap{overflow:auto;max-height:230px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:.84rem;font-family:var(--mono)}
+th,td{text-align:left;padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);position:sticky;top:0;background:var(--chrome)}
+tr.on td{background:var(--accent-soft)}
+tr.e td:last-child{color:var(--good)} tr.ne td:last-child{color:var(--bad)}
+.tally{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tally div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tally small{color:var(--muted)}
+.tally b{display:block;font-family:var(--display);font-size:1.8rem;font-variant-numeric:tabular-nums}
+.tally .track{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:6px}
+.tally .fill{height:100%;width:0;transition:width .2s}
+.tally .fe{background:var(--good)} .tally .fn{background:var(--bad)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--paper);border:0;padding:6px 14px;font:inherit;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--accent);color:#fff}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">DSCI 505/405 · Midterm review</div>
+    <h1>Midterm Review Lab</h1>
+    <p>Four questions, 100 points. Each tab has the model code (copy it), what each line does, and a lab where you enter inputs, press Submit, and watch the program run.</p>
+  </header>
+
+  <div class="browser">
+    <div class="titlebar">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab1" aria-selected="true" aria-controls="p1"><span class="fav">Q1</span>Basic Operations</button>
+        <button class="tab" role="tab" id="tab2" aria-selected="false" aria-controls="p2"><span class="fav">Q2</span>Input, Conditions &amp; Loops</button>
+        <button class="tab" role="tab" id="tab3" aria-selected="false" aria-controls="p3"><span class="fav">Q3</span>Functions &amp; Data Structures</button>
+        <button class="tab" role="tab" id="tab4" aria-selected="false" aria-controls="p4"><span class="fav">Q4</span>Reading Files</button>
+      </div>
+    </div>
+    <div class="navbar">
+      <button class="navbtn" id="navback" title="Previous question">&#8592;</button>
+      <button class="navbtn" id="navfwd" title="Next question">&#8594;</button>
+      <div class="address"><span class="lock">&#128274;</span><span>localhost:8000/midterm/</span><b id="addr">question-1</b></div>
+    </div>
+
+    <div class="viewport">
+
+<!-- ================= Q1 ================= -->
+<section class="panel" id="p1" role="tabpanel">
+  <h2>Question 1: Basic Operations <span class="pts">25 points</span></h2>
+
+  <div class="task">
+    <h4>Task 1 · Input and print</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>task1_input.py</span><button class="copy" data-copy="c11">Copy code</button></div>
+<pre id="c11">name = <span class="kw">input</span>(<span class="str">"Enter name: "</span>)
+address = <span class="kw">input</span>(<span class="str">"Enter address: "</span>)
+mno = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter mobile number: "</span>))
+
+<span class="kw">print</span>(<span class="str">"Name:"</span>, name)
+<span class="kw">print</span>(<span class="str">"Address:"</span>, address)
+<span class="kw">print</span>(<span class="str">"Mobile No:"</span>, mno)</pre></div>
+        <pre class="out" style="margin-top:10px">Name: Shraddha
+Address: Beacom School of Business
+Mobile No: 7016341981</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>input()</strong> pauses, shows the prompt, and returns whatever is typed as a <code class="i">str</code>.</li>
+        <li><strong>int()</strong> converts the mobile number text to an integer. Name and address stay as strings.</li>
+        <li><strong>print(label, value)</strong> joins the two with a space, producing <code class="i">Name: Shraddha</code>.</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · type inputs and submit</h3><button class="btn" id="sub11">Submit</button></div>
+      <div class="fields">
+        <div class="f"><label for="q1name">name</label><input id="q1name" value="Shraddha"></div>
+        <div class="f"><label for="q1addr">address</label><input id="q1addr" value="Beacom School of Business"></div>
+        <div class="f"><label for="q1mno">mobile number</label><input id="q1mno" value="7016341981"></div>
+      </div>
+      <div class="term" id="t11"><span class="p">$ python task1_input.py</span></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <h4>Task 2 · Indexing &amp; slicing with "Strawberry"</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>task2_strawberry.py</span><button class="copy" data-copy="c12">Copy code</button></div>
+<pre id="c12">word = <span class="str">"Strawberry"</span>
+
+<span class="com"># Part A: Indexing</span>
+<span class="kw">print</span>(word[<span class="num">0</span>], word[<span class="num">1</span>])    <span class="com"># S t</span>
+<span class="kw">print</span>(word[-<span class="num">2</span>], word[-<span class="num">1</span>])  <span class="com"># r y</span>
+
+<span class="com"># Part B: Slicing</span>
+<span class="kw">print</span>(word[<span class="num">2</span>:])           <span class="com"># rawberry</span>
+<span class="kw">print</span>(word[:<span class="num">6</span>])           <span class="com"># Strawb</span>
+
+<span class="com"># Part C: start:end:step</span>
+<span class="kw">print</span>(word[<span class="num">0</span>:<span class="num">10</span>:<span class="num">2</span>])       <span class="com"># Srwer</span>
+<span class="kw">print</span>(word[<span class="num">0</span>:<span class="num">10</span>:<span class="num">3</span>])       <span class="com"># Saey</span></pre></div>
+        <pre class="out" style="margin-top:10px">S t
+r y
+rawberry
+Strawb
+Srwer
+Saey</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>Two addresses per letter.</strong> From the left, counting starts at 0. From the right, at −1. "Strawberry" has 10 letters: 0…9 or −1…−10.</li>
+        <li><strong>word[i]</strong> gives one character.</li>
+        <li><strong>word[start:end]</strong> runs from <code class="i">start</code> up to but <em>not including</em> <code class="i">end</code>. Blank start = 0; blank end = the length.</li>
+        <li><strong>word[start:end:step]</strong> jumps <code class="i">step</code> each time: <code class="i">[0:10:2]</code> visits 0,2,4,6,8 → Srwer; <code class="i">[0:10:3]</code> visits 0,3,6,9 → Saey.</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · click a block or type a slice</h3><button class="btn ghost" id="anim12">Animate sequence</button></div>
+      <div class="blocks" id="blocks"></div>
+      <div class="fields">
+        <div class="f"><label for="st">start</label><input id="st" placeholder="blank = 0"></div>
+        <div class="f"><label for="en">end</label><input id="en" placeholder="blank = len"></div>
+        <div class="f"><label for="sp">step</label><input id="sp" placeholder="blank = 1"></div>
+      </div>
+      <div class="expr"><span class="py" id="pyexpr">word[0]</span><span>→</span><span class="res" id="pyres">'S'</span></div>
+      <div id="walk" style="font-size:.9rem;color:var(--muted);min-height:1.4em"></div>
+      <div class="chips">
+        <button class="chip" data-s="0" data-e="" data-p="" data-idx="1">word[0]</button>
+        <button class="chip" data-s="1" data-e="" data-p="" data-idx="1">word[1]</button>
+        <button class="chip" data-s="-2" data-e="" data-p="" data-idx="1">word[-2]</button>
+        <button class="chip" data-s="-1" data-e="" data-p="" data-idx="1">word[-1]</button>
+        <button class="chip" data-s="2" data-e="" data-p="">word[2:]</button>
+        <button class="chip" data-s="" data-e="6" data-p="">word[:6]</button>
+        <button class="chip" data-s="0" data-e="10" data-p="2">word[0:10:2]</button>
+        <button class="chip" data-s="0" data-e="10" data-p="3">word[0:10:3]</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Q2 ================= -->
+<section class="panel" id="p2" role="tabpanel" hidden>
+  <h2>Question 2: Input, Conditions &amp; Loops <span class="pts">25 points</span></h2>
+
+  <div class="task">
+    <h4>Task 1 (option A) · Greatest of four numbers with a for loop</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>largest.py</span><button class="copy" data-copy="c21">Copy code</button></div>
+<pre id="c21">num1 = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter the first number: "</span>))
+num2 = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter the second number: "</span>))
+num3 = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter the third number: "</span>))
+num4 = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter the fourth number: "</span>))
+
+<span class="com"># Initialize the greatest number with the first number</span>
+largest = num1
+
+<span class="com"># Compare each remaining number with the current greatest number</span>
+<span class="kw">for</span> number <span class="kw">in</span> (num2, num3, num4):
+    <span class="kw">if</span> number &gt; largest:
+        largest = number
+
+<span class="kw">print</span>(<span class="str">"Largest number ="</span>, largest)</pre></div>
+        <pre class="out" style="margin-top:10px">Largest number = 78</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>Start with a candidate.</strong> <code class="i">largest = num1</code>; you must have something to compare against.</li>
+        <li><strong>for</strong> visits each of the other three numbers in turn, one per iteration.</li>
+        <li><strong>if number &gt; largest</strong>: only a strictly bigger value replaces the candidate. Ties keep the earlier one.</li>
+        <li>After the loop ends, <code class="i">largest</code> holds the maximum. Three comparisons, no matter the order of inputs.</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · enter four numbers</h3><button class="btn" id="sub21">Submit</button></div>
+      <div class="fields">
+        <div class="f"><label for="n1">num1</label><input id="n1" type="number" value="12"></div>
+        <div class="f"><label for="n2">num2</label><input id="n2" type="number" value="78"></div>
+        <div class="f"><label for="n3">num3</label><input id="n3" type="number" value="45"></div>
+        <div class="f"><label for="n4">num4</label><input id="n4" type="number" value="31"></div>
+      </div>
+      <div class="nums" id="nums">
+        <div class="numc"><small>num1</small><b>12</b></div><div class="numc"><small>num2</small><b>78</b></div>
+        <div class="numc"><small>num3</small><b>45</b></div><div class="numc"><small>num4</small><b>31</b></div>
+      </div>
+      <div class="vars"><div class="var" id="vlargest"><small>largest</small><b>–</b></div></div>
+      <div class="trace" id="tr21"></div>
+      <div class="term" id="t21"><span class="p">$ python largest.py</span></div>
+    </div>
+  </div>
+
+  <div class="or">OR</div>
+
+  <div class="task">
+    <h4>Task 1 (option B) · Driving eligibility with the <code class="i">not</code> operator</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>eligibility.py</span><button class="copy" data-copy="c22">Copy code</button></div>
+<pre id="c22"><span class="com"># Enter the person's age</span>
+age = <span class="kw">int</span>(<span class="kw">input</span>(<span class="str">"Enter age: "</span>))
+
+<span class="com"># Check whether the age is outside the eligible range</span>
+<span class="kw">if not</span> (age &gt; <span class="num">15</span> <span class="kw">and</span> age &lt; <span class="num">18</span>):
+    <span class="kw">print</span>(<span class="str">"Not eligible to drive in the simulation."</span>)
+<span class="kw">else</span>:
+    <span class="kw">print</span>(<span class="str">"Eligible to drive in the simulation."</span>)</pre></div>
+        <pre class="out" style="margin-top:10px">Not eligible to drive in the simulation.</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>Eligible range</strong> is 15 &lt; age &lt; 18, so only ages 16 and 17 qualify.</li>
+        <li><strong>and</strong> is True only when both comparisons are True.</li>
+        <li><strong>not</strong> flips it: <code class="i">not True → False</code>, <code class="i">not False → True</code>. So the <code class="i">if</code> branch runs for anyone <em>outside</em> the range.</li>
+        <li>Python evaluates inside the parentheses first, then applies <code class="i">not</code>, then chooses the branch.</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · enter an age</h3><button class="btn" id="sub22">Submit</button></div>
+      <div class="fields"><div class="f" style="max-width:180px"><label for="age">age</label><input id="age" type="number" value="21"></div></div>
+      <div class="range">
+        <div class="line"></div><div class="ok" id="okband"></div>
+        <div class="tick" style="left:0%">0</div><div class="tick" id="tk15">15</div><div class="tick" id="tk18">18</div><div class="tick" style="left:100%">30</div>
+        <div class="pin" id="pin" style="left:70%"></div>
+      </div>
+      <div class="bool" id="bool">
+        <span id="b1">age &gt; 15</span><span id="b2">age &lt; 18</span><span id="b3">and</span><span id="b4">not</span><span id="b5">branch</span>
+      </div>
+      <div class="term" id="t22"><span class="p">$ python eligibility.py</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Q3 ================= -->
+<section class="panel" id="p3" role="tabpanel" hidden>
+  <h2>Question 3: Functions &amp; Data Structures <span class="pts">25 points</span></h2>
+
+  <div class="task">
+    <h4>Task 1 (option A) · Pass a list to a function and compute the average</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>average.py</span><button class="copy" data-copy="c31">Copy code</button></div>
+<pre id="c31"><span class="com"># Define a function to calculate the average of the list elements</span>
+<span class="kw">def</span> Calculate_Avg(Lst):
+    <span class="kw">print</span>(<span class="str">"List ="</span>, Lst)          <span class="com"># Display the list</span>
+    <span class="kw">print</span>(<span class="str">"Sum ="</span>, <span class="kw">sum</span>(Lst))      <span class="com"># Display the sum</span>
+    avg = <span class="kw">sum</span>(Lst) / <span class="kw">len</span>(Lst)      <span class="com"># Calculate the average</span>
+    <span class="kw">print</span>(<span class="str">"Average ="</span>, avg)       <span class="com"># Display the average</span>
+
+<span class="com"># Create a list of five numbers</span>
+Lst = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">3</span>]
+
+<span class="com"># Pass the list to the function</span>
+Calculate_Avg(Lst)</pre></div>
+        <pre class="out" style="margin-top:10px">List = [10, 20, 30, 40, 3]
+Sum = 103
+Average = 20.6</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>def</strong> creates the function; nothing runs until it is called.</li>
+        <li><strong>Lst</strong> is a parameter: the list is passed in by reference, so the function reads the same five items.</li>
+        <li><strong>sum()</strong> adds every element; <strong>len()</strong> counts them (5).</li>
+        <li><code class="i">103 / 5</code> uses true division → <code class="i">20.6</code> (a float).</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · edit the five elements</h3><button class="btn" id="sub31">Submit</button></div>
+      <div class="fields">
+        <div class="f"><label for="l0">Lst[0]</label><input id="l0" type="number" value="10"></div>
+        <div class="f"><label for="l1">Lst[1]</label><input id="l1" type="number" value="20"></div>
+        <div class="f"><label for="l2">Lst[2]</label><input id="l2" type="number" value="30"></div>
+        <div class="f"><label for="l3">Lst[3]</label><input id="l3" type="number" value="40"></div>
+        <div class="f"><label for="l4">Lst[4]</label><input id="l4" type="number" value="3"></div>
+      </div>
+      <div class="cells" id="cells31"></div>
+      <div class="vars">
+        <div class="var" id="vsum"><small>sum(Lst)</small><b>–</b></div>
+        <div class="var" id="vlen"><small>len(Lst)</small><b>–</b></div>
+        <div class="var" id="vavg"><small>avg</small><b>–</b></div>
+      </div>
+      <div class="term" id="t31"><span class="p">$ python average.py</span></div>
+    </div>
+  </div>
+
+  <div class="or">OR</div>
+
+  <div class="task">
+    <h4>Task 1 (option B) · Store squares of numbers in a dictionary</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>squares.py</span><button class="copy" data-copy="c32">Copy code</button></div>
+<pre id="c32"><span class="kw">def</span> Sq_of_numbers(n):            <span class="com"># Define a function that accepts a number n</span>
+    d = <span class="kw">dict</span>()                   <span class="com"># Create an empty dictionary</span>
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="kw">range</span>(<span class="num">1</span>, n + <span class="num">1</span>):      <span class="com"># Loop through the numbers from 1 to n</span>
+        <span class="kw">if</span> i <span class="kw">not in</span> d:              <span class="com"># Check whether i is absent from the dictionary</span>
+            d[i] = i * i             <span class="com"># Store i as the key and its square as the value</span>
+
+    <span class="kw">return</span> d                     <span class="com"># Return the completed dictionary</span>
+
+
+<span class="kw">print</span>(<span class="str">"Squares of numbers:"</span>)     <span class="com"># Display a heading</span>
+Z = Sq_of_numbers(<span class="num">5</span>)             <span class="com"># Call the function with 5 and store the result in Z</span>
+<span class="kw">print</span>(Z)                         <span class="com"># Display the dictionary</span></pre></div>
+        <pre class="out" style="margin-top:10px">Squares of numbers:
+{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}</pre>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>range(1, n+1)</strong> produces 1…n. The <code class="i">+1</code> is needed because range stops before its end.</li>
+        <li><strong>d[i] = i * i</strong> adds a key:value pair. Keys are the numbers, values their squares.</li>
+        <li><strong>if i not in d</strong> guards against duplicate keys (always True here, but shows membership testing).</li>
+        <li><strong>return d</strong> hands the finished dict back to the caller, who stores it in <code class="i">Z</code>.</li>
+      </ol></div>
+    </div>
+    <div class="lab">
+      <div class="head"><h3>Lab · choose n</h3><button class="btn" id="sub32">Submit</button></div>
+      <div class="fields"><div class="f" style="max-width:160px"><label for="nn">n</label><input id="nn" type="number" min="1" max="12" value="5"></div></div>
+      <div class="cells" id="cells32"></div>
+      <div class="term" id="t32"><span class="p">$ python squares.py</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Q4 ================= -->
+<section class="panel" id="p4" role="tabpanel" hidden>
+  <h2>Question 4: Reading Files &amp; Exploring Data <span class="pts">25 points</span></h2>
+
+  <div class="task">
+    <h4>Step 1 · Read Gym.csv with the <code class="i">with</code> statement</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>read_gym.py</span><button class="copy" data-copy="c41">Copy code</button></div>
+<pre id="c41"><span class="kw">import</span> csv  <span class="com"># Import the csv module</span>
+
+<span class="kw">with open</span>(<span class="str">"Gym.csv"</span>, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> file:  <span class="com"># Open the file</span>
+    reader = csv.reader(file)   <span class="com"># Create a CSV reader</span>
+    headings = <span class="kw">next</span>(reader)     <span class="com"># Read the headings</span>
+    responses = <span class="kw">list</span>(reader)    <span class="com"># Store the attendee responses</span>
+
+<span class="kw">print</span>(headings)                 <span class="com"># Display the headings</span>
+<span class="kw">for</span> row <span class="kw">in</span> responses:           <span class="com"># Loop through each response</span>
+    <span class="kw">print</span>(row)                  <span class="com"># Display the response</span></pre></div>
+      </div>
+      <div class="logic"><h3>Logic</h3><ol>
+        <li><strong>with open(...) as file</strong> opens the file and closes it automatically when the block ends.</li>
+        <li><strong>csv.reader</strong> splits each line on commas into a list of strings.</li>
+        <li><strong>next(reader)</strong> consumes the first line (the headings) so it is not counted as data.</li>
+        <li><strong>list(reader)</strong> reads the remaining rows into <code class="i">responses</code>, a list of lists. Each row is <code class="i">[Attendee, Age Group, Outcome]</code>, so the outcome is <code class="i">row[2]</code>.</li>
+      </ol></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <h4>Step 2 · Count Enroll vs Not Enroll (while loop OR for loop)</h4>
+    <div class="grid">
+      <div>
+        <div class="code"><div class="bar"><span>count_while.py</span><button class="copy" data-copy="c42">Copy code</button></div>
+<pre id="c42"><span class="com"># Initialize counters</span>
+enroll = <span class="num">0</span>
+not_enroll = <span class="num">0</span>
+i = <span class="num">0</span>
+
+<span class="com"># Check each attendee's outcome in the data already read</span>
+<span class="kw">while</span> i &lt; <span class="kw">len</span>(responses):
+    <span class="kw">if</span> responses[i][<span class="num">2</span>] == <span class="str">"Enroll"</span>:
+        enroll = enroll + <span class="num">1</span>
+    <span class="kw">elif</span> responses[i][<span class="num">2</span>] == <span class="str">"Not Enroll"</span>:
+        not_enroll = not_enroll + <span class="num">1</span>
+
+    i = i + <span class="num">1</span>  <span class="com"># Move to the next attendee</span>
+
+<span class="com"># Display the counts</span>
+<span class="kw">print</span>(<span class="str">"Enroll:"</span>, enroll)
+<span class="kw">print</span>(<span class="str">"Not Enroll:"</span>, not_enroll)</pre></div>
+      </div>
+      <div>
+        <div class="code"><div class="bar"><span>count_for.py</span><button class="copy" data-copy="c43">Copy code</button></div>
+<pre id="c43"><span class="com"># Initialize counters</span>
+enroll = <span class="num">0</span>
+not_enroll = <span class="num">0</span>
+
+<span class="com"># Check each attendee's outcome in the data already read</span>
+<span class="kw">for</span> row <span class="kw">in</span> responses:
+    <span class="kw">if</span> row[<span class="num">2</span>] == <span class="str">"Enroll"</span>:
+        enroll = enroll + <span class="num">1</span>
+    <span class="kw">elif</span> row[<span class="num">2</span>] == <span class="str">"Not Enroll"</span>:
+        not_enroll = not_enroll + <span class="num">1</span>
+
+<span class="com"># Display the counts</span>
+<span class="kw">print</span>(<span class="str">"Enroll:"</span>, enroll)
+<span class="kw">print</span>(<span class="str">"Not Enroll:"</span>, not_enroll)</pre></div>
+        <pre class="out" style="margin-top:10px">Enroll: 140
+Not Enroll: 260</pre>
+      </div>
+    </div>
+    <div class="logic"><h3>Logic</h3><ol>
+      <li><strong>Counters start at 0.</strong> Two separate variables, one per category.</li>
+      <li><strong>while</strong> version needs its own index <code class="i">i</code>, a condition <code class="i">i &lt; len(responses)</code>, and <code class="i">i = i + 1</code> at the bottom. Forget the increment and the loop never ends.</li>
+      <li><strong>for</strong> version lets Python hand you each <code class="i">row</code> directly. No index, no increment, same result.</li>
+      <li><strong>if / elif</strong> tests <code class="i">row[2]</code> (the Outcome column) and adds 1 to the matching counter. Comparison is exact, so <code class="i">"Enroll"</code> and <code class="i">"enroll"</code> would not match.</li>
+    </ol></div>
+    <div class="note">Both programs produce identical counts. The exam accepts either; the <code class="i">for</code> loop is shorter and safer, the <code class="i">while</code> loop shows you control the index yourself.</div>
+    <div class="lab">
+      <div class="head">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><h3>Lab · run the counter over a sample Gym.csv</h3>
+          <div class="seg"><button class="on" id="modeWhile">while</button><button id="modeFor">for</button></div></div>
+        <div style="display:flex;gap:8px"><button class="btn" id="sub4">Submit</button><button class="btn ghost" id="shuffle4">New sample</button></div>
+      </div>
+      <div class="csvwrap"><table id="csv"><thead><tr><th>Attendee</th><th>Age Group</th><th>Outcome</th></tr></thead><tbody></tbody></table></div>
+      <div class="vars" id="vars4">
+        <div class="var" id="vi"><small>i</small><b>0</b></div>
+        <div class="var" id="vrow"><small>row[2]</small><b>–</b></div>
+        <div class="var" id="vcond"><small>condition</small><b>–</b></div>
+      </div>
+      <div class="tally">
+        <div><small>enroll</small><b id="te">0</b><div class="track"><div class="fill fe" id="fe"></div></div></div>
+        <div><small>not_enroll</small><b id="tn">0</b><div class="track"><div class="fill fn" id="fn"></div></div></div>
+      </div>
+      <div class="term" id="t4"><span class="p">$ python count_while.py</span></div>
+    </div>
+  </div>
+</section>
+
+    </div>
+    <div class="statusbar"><span>Python 3 · interactive lab</span><span id="status">Ready</span></div>
+  </div>
+</div>
+
+<script>
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+// ---------- tabs ----------
+const tabs=[...document.querySelectorAll('.tab')];const slugs={tab1:'question-1',tab2:'question-2',tab3:'question-3',tab4:'question-4'};
+function showTab(id){tabs.forEach(t=>{const on=t.id===id;t.setAttribute('aria-selected',on);$(t.getAttribute('aria-controls')).hidden=!on});$('addr').textContent=slugs[id];$('status').textContent='Loaded '+slugs[id];try{localStorage.setItem('mt-tab',id)}catch(e){}}
+tabs.forEach(t=>t.addEventListener('click',()=>showTab(t.id)));
+function cur(){return tabs.findIndex(t=>t.getAttribute('aria-selected')==='true')}
+$('navback').addEventListener('click',()=>showTab(tabs[Math.max(0,cur()-1)].id));
+$('navfwd').addEventListener('click',()=>showTab(tabs[Math.min(3,cur()+1)].id));
+try{const h=location.hash.replace('#','');const m={q1:'tab1',q2:'tab2',q3:'tab3',q4:'tab4'};if(m[h])showTab(m[h]);else{const s=localStorage.getItem('mt-tab');if(s&&slugs[s])showTab(s)}}catch(e){}
+
+// ---------- copy ----------
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
+  const el=$(b.dataset.copy),txt=el.innerText;
+  const done=()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy code',1400)};
+  const fb=()=>{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected, press Ctrl/Cmd+C';setTimeout(()=>b.textContent='Copy code',2200)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done).catch(fb);else fb();
+}));
+
+// ---------- terminal helper ----------
+async function typeLine(term,html,delay=18){
+  const span=document.createElement('span');span.className='cur';term.appendChild(document.createTextNode('\n'));term.appendChild(span);
+  const tmp=document.createElement('span');tmp.innerHTML=html;const text=tmp.textContent;let i=0;
+  while(i<text.length){i++;span.textContent=text.slice(0,i);await sleep(delay)}
+  span.className='';span.innerHTML=html;
+}
+function resetTerm(term,cmd){term.innerHTML=`<span class="p">$ python ${cmd}</span>`}
+const busy={};
+function guard(k,fn){return async()=>{if(busy[k])return;busy[k]=true;$('status').textContent='Running…';try{await fn()}finally{busy[k]=false;$('status').textContent='Finished'}}}
+
+// ---------- Q1 task 1 ----------
+$('sub11').addEventListener('click',guard('q11',async()=>{
+  const t=$('t11');resetTerm(t,'task1_input.py');
+  const name=$('q1name').value,addr=$('q1addr').value,mno=$('q1mno').value;
+  await typeLine(t,`<span class="p">Enter name: </span><span class="u">${esc(name)}</span>`);
+  await typeLine(t,`<span class="p">Enter address: </span><span class="u">${esc(addr)}</span>`);
+  await typeLine(t,`<span class="p">Enter mobile number: </span><span class="u">${esc(mno)}</span>`);
+  const n=parseInt(mno,10);
+  if(isNaN(n)){await typeLine(t,`<span style="color:var(--bad)">ValueError: invalid literal for int() with base 10: '${esc(mno)}'</span>`,8);return}
+  await sleep(300);
+  await typeLine(t,`<span class="o">Name:</span> ${esc(name)}`,10);
+  await typeLine(t,`<span class="o">Address:</span> ${esc(addr)}`,10);
+  await typeLine(t,`<span class="o">Mobile No:</span> ${n}`,10);
+}));
+
+// ---------- Q1 task 2 slicer ----------
+const word='Strawberry',L=word.length;const blocksEl=$('blocks');
+word.split('').forEach((ch,i)=>{const d=document.createElement('div');d.className='blk';d.dataset.i=i;d.innerHTML=`<div class="ch">${ch}</div><div class="ix">${i}</div><div class="nx">${i-L}</div>`;d.addEventListener('click',()=>{setF(String(i),'','');idxMode=true;upd()});blocksEl.appendChild(d)});
+const st=$('st'),en=$('en'),sp=$('sp');let idxMode=true,current=[];
+function setF(a,b,c){st.value=a;en.value=b;sp.value=c}
+function pf(el){const t=el.value.trim();if(t==='')return null;const n=parseInt(t,10);return isNaN(n)?null:n}
+function sliceIdx(s,e,p){let step=p==null?1:p;if(step===0)return{err:'step cannot be zero'};let a,b;
+  if(step>0){a=s==null?0:(s<0?Math.max(L+s,0):Math.min(s,L));b=e==null?L:(e<0?Math.max(L+e,0):Math.min(e,L))}
+  else{a=s==null?L-1:(s<0?Math.max(L+s,-1):Math.min(s,L-1));b=e==null?-1:(e<0?Math.max(L+e,-1):Math.min(e,L-1))}
+  const out=[];if(step>0)for(let i=a;i<b;i+=step)out.push(i);else for(let i=a;i>b;i+=step)out.push(i);return{idx:out,a,b,step}}
+function clearB(){document.querySelectorAll('.blk').forEach(b=>b.classList.remove('sel','skip'))}
+function upd(){const s=pf(st),e=pf(en),p=pf(sp);clearB();
+  if(idxMode&&s!=null&&en.value===''&&sp.value===''){const i=s<0?L+s:s;$('pyexpr').textContent=`word[${s}]`;
+    if(i<0||i>=L){$('pyres').textContent='IndexError';$('walk').textContent=`Index ${s} is outside 0…${L-1}.`;current=[];return}
+    current=[i];document.querySelector(`.blk[data-i="${i}"]`).classList.add('sel');$('pyres').textContent=`'${word[i]}'`;
+    $('walk').innerHTML=s<0?`Negative index counts from the right: ${L} + (${s}) = <b>${i}</b> → '${word[i]}'`:`Position <b>${i}</b> from the left → '${word[i]}'`;return}
+  idxMode=false;const r=sliceIdx(s,e,p);$('pyexpr').textContent=`word[${st.value.trim()}:${en.value.trim()}${sp.value.trim()!==''?':'+sp.value.trim():''}]`;
+  if(r.err){$('pyres').textContent='ValueError';$('walk').textContent=r.err;current=[];return}
+  current=r.idx;$('pyres').textContent=`'${r.idx.map(i=>word[i]).join('')}'`;r.idx.forEach(i=>document.querySelector(`.blk[data-i="${i}"]`).classList.add('sel'));
+  if(Math.abs(r.step)>1){const lo=Math.min(r.a,r.b),hi=Math.max(r.a,r.b);document.querySelectorAll('.blk').forEach(b=>{const i=+b.dataset.i;if(i>=lo&&i<=hi&&!r.idx.includes(i))b.classList.add('skip')})}
+  $('walk').innerHTML=`start=<b>${r.a}</b>, stop before <b>${r.b}</b>, step <b>${r.step}</b> → indexes <b>${r.idx.join(', ')||'(none)'}</b>`}
+[st,en,sp].forEach(el=>el.addEventListener('input',()=>{idxMode=(en.value===''&&sp.value==='');upd()}));
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');setF(c.dataset.s,c.dataset.e,c.dataset.p);idxMode=!!c.dataset.idx;upd()}));
+$('anim12').addEventListener('click',guard('q12',async()=>{const seq=current.slice();if(!seq.length)return;clearB();let built='';$('pyres').textContent="'…";
+  for(const i of seq){document.querySelector(`.blk[data-i="${i}"]`).classList.add('sel');built+=word[i];$('pyres').textContent=`'${built}…`;await sleep(380)}$('pyres').textContent=`'${built}'`}));
+setF('0','','');upd();
+
+// ---------- Q2 largest ----------
+$('sub21').addEventListener('click',guard('q21',async()=>{
+  const v=['n1','n2','n3','n4'].map(id=>parseInt($(id).value,10)||0);const cards=[...document.querySelectorAll('#nums .numc')];
+  cards.forEach((c,i)=>{c.className='numc';c.querySelector('b').textContent=v[i]});
+  const t=$('t21');resetTerm(t,'largest.py');const tr=$('tr21');tr.innerHTML='';const vl=$('vlargest').querySelector('b');vl.textContent='–';
+  const names=['first','second','third','fourth'];
+  for(let i=0;i<4;i++)await typeLine(t,`<span class="p">Enter the ${names[i]} number: </span><span class="u">${v[i]}</span>`,12);
+  let largest=v[0];vl.textContent=largest;cards[0].classList.add('king');
+  const add=(title,e)=>{const d=document.createElement('div');d.className='tr on';d.innerHTML=`<div class="n">${tr.children.length+1}</div><div><div>${title}</div><div class="e">${e}</div></div>`;tr.appendChild(d);return d};
+  let d=add('largest = num1',`largest = ${largest}`);await sleep(700);d.classList.replace('on','done');
+  for(let i=1;i<4;i++){
+    cards[i].classList.add('cmp');d=add(`number = num${i+1} → if number &gt; largest`,`${v[i]} &gt; ${largest} → ${v[i]>largest}`);await sleep(800);
+    if(v[i]>largest){cards.forEach(c=>c.classList.remove('king'));largest=v[i];cards[i].classList.add('king');vl.textContent=largest;$('vlargest').classList.add('pulse');d.querySelector('.e').innerHTML+=` → largest = ${largest}`;await sleep(300);$('vlargest').classList.remove('pulse')}
+    else cards[i].classList.add('lost');
+    cards[i].classList.remove('cmp');d.classList.replace('on','done');await sleep(250);
+  }
+  await typeLine(t,`<span class="o">Largest number =</span> ${largest}`,10);
+}));
+
+// ---------- Q2 eligibility ----------
+function pos(a){return Math.min(100,Math.max(0,a/30*100))+'%'}
+$('okband').style.left=pos(15);$('okband').style.width=(pos(18).replace('%','')-pos(15).replace('%',''))+'%';$('tk15').style.left=pos(15);$('tk18').style.left=pos(18);
+$('sub22').addEventListener('click',guard('q22',async()=>{
+  const age=parseInt($('age').value,10)||0;const t=$('t22');resetTerm(t,'eligibility.py');
+  ['b1','b2','b3','b4','b5'].forEach(id=>{$(id).className=''});
+  $('pin').style.left=pos(age);
+  await typeLine(t,`<span class="p">Enter age: </span><span class="u">${age}</span>`,14);await sleep(500);
+  const c1=age>15,c2=age<18,both=c1&&c2,neg=!both;
+  const show=(id,txt,val)=>{const e=$(id);e.textContent=txt;e.className='on '+(val?'t':'f')};
+  show('b1',`age > 15 → ${c1?'True':'False'}`,c1);await sleep(600);
+  show('b2',`age < 18 → ${c2?'True':'False'}`,c2);await sleep(600);
+  show('b3',`${c1?'True':'False'} and ${c2?'True':'False'} → ${both?'True':'False'}`,both);await sleep(600);
+  show('b4',`not ${both?'True':'False'} → ${neg?'True':'False'}`,neg);await sleep(600);
+  show('b5',neg?'if branch runs':'else branch runs',!neg);await sleep(300);
+  await typeLine(t,`<span class="o">${neg?'Not eligible to drive in the simulation.':'Eligible to drive in the simulation.'}</span>`,10);
+}));
+
+// ---------- Q3 average ----------
+function drawCells(id,items){const c=$(id);c.innerHTML='';items.forEach(it=>{const d=document.createElement('div');d.className='cell';d.innerHTML=`<small>${it.k}</small>${it.v}`;c.appendChild(d)});return [...c.children]}
+drawCells('cells31',[10,20,30,40,3].map((v,i)=>({k:`[${i}]`,v})));
+$('sub31').addEventListener('click',guard('q31',async()=>{
+  const lst=[0,1,2,3,4].map(i=>parseFloat($('l'+i).value)||0);const cells=drawCells('cells31',lst.map((v,i)=>({k:`[${i}]`,v})));
+  const t=$('t31');resetTerm(t,'average.py');['vsum','vlen','vavg'].forEach(id=>$(id).querySelector('b').textContent='–');
+  await typeLine(t,`<span class="o">List =</span> [${lst.join(', ')}]`,10);
+  let s=0;for(let i=0;i<5;i++){cells[i].classList.add('on');s+=lst[i];$('vsum').querySelector('b').textContent=+s.toFixed(4);await sleep(450);cells[i].classList.remove('on')}
+  await typeLine(t,`<span class="o">Sum =</span> ${+s.toFixed(4)}`,10);
+  $('vlen').querySelector('b').textContent=5;await sleep(400);
+  const avg=s/5;$('vavg').querySelector('b').textContent=+avg.toFixed(4);$('vavg').classList.add('pulse');await sleep(400);$('vavg').classList.remove('pulse');
+  await typeLine(t,`<span class="o">Average =</span> ${+avg.toFixed(4)}`,10);
+}));
+
+// ---------- Q3 squares ----------
+$('sub32').addEventListener('click',guard('q32',async()=>{
+  let n=Math.min(12,Math.max(1,parseInt($('nn').value,10)||5));$('nn').value=n;const c=$('cells32');c.innerHTML='';const t=$('t32');resetTerm(t,'squares.py');
+  await typeLine(t,`<span class="o">Squares of numbers:</span>`,10);
+  const d={};
+  for(let i=1;i<=n;i++){const el=document.createElement('div');el.className='cell on';el.innerHTML=`<small>i = ${i}</small>${i} not in d → True`;c.appendChild(el);await sleep(500);
+    d[i]=i*i;el.className='cell new';el.innerHTML=`<small>d[${i}]</small>${i*i}`;await sleep(250)}
+  await typeLine(t,`{${Object.entries(d).map(([k,v])=>`${k}: ${v}`).join(', ')}}`,6);
+}));
+
+// ---------- Q4 csv ----------
+const groups=['Under 30','Between 30 and 50','Over 50'];let rows=[];const N=400,E=140;
+function makeRows(){const out=[];for(let i=0;i<N;i++)out.push(['A'+String(i+1).padStart(3,'0'),groups[Math.floor(Math.random()*3)],i<E?'Enroll':'Not Enroll']);
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}out.forEach((r,i)=>r[0]='A'+String(i+1).padStart(3,'0'));return out}
+function renderRows(){const tb=document.querySelector('#csv tbody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.className=r[2]==='Enroll'?'e':'ne';tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`;tb.appendChild(tr)})}
+rows=makeRows();renderRows();
+let mode='while';
+$('modeWhile').addEventListener('click',()=>{mode='while';$('modeWhile').classList.add('on');$('modeFor').classList.remove('on');$('vi').querySelector('small').textContent='i';resetTerm($('t4'),'count_while.py')});
+$('modeFor').addEventListener('click',()=>{mode='for';$('modeFor').classList.add('on');$('modeWhile').classList.remove('on');$('vi').querySelector('small').textContent='row #';resetTerm($('t4'),'count_for.py')});
+$('shuffle4').addEventListener('click',()=>{if(busy.q4)return;rows=makeRows();renderRows();$('te').textContent=0;$('tn').textContent=0;$('fe').style.width=0;$('fn').style.width=0});
+$('sub4').addEventListener('click',guard('q4',async()=>{
+  const t=$('t4');resetTerm(t,mode==='while'?'count_while.py':'count_for.py');
+  const trs=[...document.querySelectorAll('#csv tbody tr')];trs.forEach(r=>r.classList.remove('on'));
+  let enroll=0,not_enroll=0;$('te').textContent=0;$('tn').textContent=0;$('fe').style.width=0;$('fn').style.width=0;
+  const wrap=document.querySelector('.csvwrap');
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];trs[i].classList.add('on');if(i>0)trs[i-1].classList.remove('on');
+    const slow=i<12||i>rows.length-4;
+    if(slow||i%10===0){trs[i].scrollIntoView({block:'nearest'});$('vi').querySelector('b').textContent=i;$('vrow').querySelector('b').textContent=`"${r[2]}"`;
+      $('vcond').querySelector('b').textContent=r[2]==='Enroll'?'if → True':'elif → True';$('vcond').querySelector('b').style.color=r[2]==='Enroll'?'var(--good)':'var(--bad)'}
+    if(r[2]==='Enroll')enroll++;else not_enroll++;
+    $('te').textContent=enroll;$('tn').textContent=not_enroll;$('fe').style.width=(enroll/N*100)+'%';$('fn').style.width=(not_enroll/N*100)+'%';
+    await sleep(slow?420:8);
+  }
+  trs[rows.length-1].classList.remove('on');$('vi').querySelector('b').textContent=mode==='while'?`${N} (loop ends: i < len is False)`:`${N} rows done`;
+  await typeLine(t,`<span class="o">Enroll:</span> ${enroll}`,10);await typeLine(t,`<span class="o">Not Enroll:</span> ${not_enroll}`,10);
+}));
+</script>
